@@ -1,4 +1,4 @@
-# [API reference](https://jsapi.apiary.io/previews/scoreboard6/reference)
+# [API reference](https://jsapi.apiary.io/previews/foosball/reference)
 
 # Setup Development Environment
 
