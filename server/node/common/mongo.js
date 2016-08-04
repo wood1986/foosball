@@ -1,9 +1,13 @@
 "use strict";
 
-let configs = require("../configs.js");
+let configs = require("../../configs.js");
 
 module.exports = (callback) => {
   if (this.db) {
+    if (callback) {
+      callback();
+      return;
+    }
     return this.db;
   }
 
@@ -15,7 +19,9 @@ module.exports = (callback) => {
       }
 
       this.db = db;
-      callback();
+      if (callback) {
+        callback();
+      }
     }
   );
 };

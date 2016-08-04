@@ -12,23 +12,104 @@
 - `cd server/node/tools`
 - `node creator.js --help`
 
-# Query
+# Sample query
 
+- net score group by player and type
 `db.getCollection('matches').aggregate([
   {
-    $match: { $or: [ { winners: "<playerId>" }, { losers: "<playerId>" } ] }
+    "$project": {
+      "winners" : {
+        "$map": {
+          input: "$winners",
+          as: "a",
+          in: {
+            "player": "$$a",
+            "score": { $multiply: [ "$score", 1 ] }
+          }
+        }
+      },
+      "losers": {
+        "$map": {
+          input: "$losers",
+          as: "a",
+          in: {
+            "player": "$$a",
+            "score": { $multiply: [ "$score", -1 ] }
+          }
+        }
+      },
+      "playedAt": 1,
+    }
   },
   {
-    $project: { "player": { $literal: "<playerId>" }, "playedAt": 1, "score": 1, "size": { $size: "$winners" }, "win": { $setIsSubset: [ ["<playerId>"] , "$winners" ] } }
+    $project: {
+      "players": {
+        $setUnion: ["$winners", "$losers"]
+      },
+      "playedAt": 1,
+      "size": { "$size": "$winners" }
+    }
+  },
+  {
+    $unwind: "$players"
+  },
+  {
+    $project: {
+      "player": "$players.player",
+      "score": "$players.score",
+      "playedAt": 1,
+      "size": 1
+    }
   },
   {
     $group: {
       "_id": {
         "player": "$player",
-        "win": "$win"
+        "size": "$size"
       },
-      "sum": { $sum: "$score" },
-      "count": { $sum: 1 }
+      "score": {
+        $sum: "$score"
+      }
+    }
+  }
+])`
+
+- net score for a single player group by type
+`db.getCollection('matches').aggregate([
+  {
+    $match: {
+      $or: [
+        { winners: "e6EVrvMQTjW6R4fLvYeynw" },
+        { losers:"e6EVrvMQTjW6R4fLvYeynw" }
+      ]
+    }
+  },
+  {
+    $project: {
+      player: { $literal: "e6EVrvMQTjW6R4fLvYeynw" },
+      score: {
+         $multiply: [
+          {
+            $cond: {
+              if: { $setIsSubset: [ ["e6EVrvMQTjW6R4fLvYeynw"], "$winners" ] }, then: 1, else: -1
+            }
+          },
+          "$score"
+        ]
+      },
+      playedAt: 1,
+      size: { "$size": "$winners" }
+    }
+  },
+  {
+    $group: {
+      "_id": {
+        "player": "$player",
+        "size": "$size"
+      },
+      "score": {
+        $sum: "$score"
+      }
     }
   }
 ])`

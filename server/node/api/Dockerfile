@@ -8,7 +8,7 @@ WORKDIR /node
 
 ADD ./node /node
 
-ADD ./configs.js /node
+ADD ../configs.js /node
 
 RUN npm install --production
 

@@ -4,6 +4,25 @@ let async = require("async"),
 
 exports.apiUrl = "http://localhost:3000/";
 
+module.exports.createSettings = (K, G, validity, callback) => {
+  let body = {
+    K,
+    G,
+    validity
+  };
+  request(
+    {
+      "method": "POST",
+      "uri": `${this.apiUrl}/1.0/settings`,
+      "json": true,
+      body
+    },
+    (err, res, body) => {
+      callback(err, body);
+    }
+  );
+};
+
 module.exports.createPlayers = (n, callback) => {
   async.times(
     n,
@@ -21,7 +40,7 @@ module.exports.createPlayers = (n, callback) => {
           "body": body
         },
         (err, res, body) => {
-          next(err || res.statusCode !== 200, body);
+          next(err, body);
         }
       )
     },
@@ -29,20 +48,21 @@ module.exports.createPlayers = (n, callback) => {
   );
 }
 
-module.exports.createMatches = (n, players, callback) => {
+module.exports.createMatches = (n, players, settings, callback) => {
   async.times(
     n,
     (m, next) => {
       players = _(players).shuffle().value();
 
-      let singleOrDouble = _.sample([1, 2]);
-      
-      let body = {
-        "winners": _(players).take(singleOrDouble).map("id").value(),
-        "losers": _(players).takeRight(singleOrDouble).map("id").value(),
-        "score": _.random(1, 5),
-        "playedAt": Date.now - _.random(86400000) 
-      };
+      let singleOrDouble = players.length == 2 ? 1 : _.sample([1, 2]),
+          body = {
+            "winners": _(players).take(singleOrDouble).map("id").value(),
+            "losers": _(players).takeRight(singleOrDouble).map("id").value(),
+            "score": _.random(1, 5),
+            "playedAt": Date.now() - _.random(86400000 * 28),
+            "K": settings._id,
+            "G": settings._id
+          };
 
       request(
         {
@@ -54,8 +74,8 @@ module.exports.createMatches = (n, players, callback) => {
             "accessToken": players[0].accessToken
           }
         },
-        (err, res, body) => {
-          next(err || res.statusCode !== 200, body);
+        (err, res) => {
+          next(err, body);
         }
       );
     },

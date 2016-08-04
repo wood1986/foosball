@@ -2,45 +2,13 @@
 
 let name = __filename.replace(new RegExp(`(^${__dirname.replace("/", "\/")}\/|\.js$)`, "g"), ""),
   router = require("express").Router(),
-  collection = require("../mongo.js")().collection(name),
-  utils = require("../utils.js");
+  collection = require("../../../common/mongo.js")().collection(name),
+  middleware = require("../../../common/middleware.js"),
+  utils = require("../../../common/utils.js");
 
 router
   .route(`/1.0/${name}`)
-  .get((req, res) => {
-    let limit = Math.min(parseInt(req.query.limit) || 16, 256),
-      skip = parseInt(req.query.skip) || 0,
-      aggregate = req.query.aggregate || "{}"
-  
-    try {
-      aggregate = JSON.parse(aggregate);
-    } catch (err) {
-      console.log(err);
-      res.status(400).end();
-      return;
-    }
-
-    collection
-      .aggregate(aggregate)
-      .sort({
-        "createdAt": -1
-      })
-      .skip(skip)
-      .limit(limit)
-      .toArray((err, docs) => {
-        if (err) {
-          res.status(500).end();
-          return;
-        }
-
-        if (!docs.length) {
-          res.status(404).json([]);
-          return;
-        }
-
-        res.json(docs);
-      });
-  })
+  .get(middleware.defaultGet(collection))
   .post((req, res) => {
     let body = req.body;
 
@@ -69,13 +37,13 @@ router
         "w": 1,
         "j": true
       },
-      (error, result) => {
-        if (error) {
+      (err, player) => {
+        if (err) {
           res.status(500).end();
           return;
         }
 
-        if (!result) {
+        if (!player) {
           res.status(500).end();
           return;
         }
