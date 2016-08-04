@@ -38,15 +38,18 @@ module.exports.defaultGet = (collection) => {
   return (req, res) => {
     try {
       collection
-        .aggregate(JSON.parse(req.query.q))
-        .toArray((err, docs) => {
-          if (err) {
-            res.status(500).end();
-            return;
+        .aggregate(
+          JSON.parse(req.query.pipeline),
+          {},
+          (err, result) => {
+            if (err) {
+              res.status(500).end();
+              return;
+            }
+            
+            res.status(result.length ? 404 : 200).json(result);
           }
-
-          res.status(docs.length ? 404 : 200).json(docs);
-        });
+        );
     }
     catch(err) {
       res.status(400).end();
