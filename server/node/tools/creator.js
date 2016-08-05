@@ -1,14 +1,14 @@
 let program = require("commander");
 
 program
-  .option("-m, --num-of-matches [m]", "#Matches", (n) => { return parseInt(n); }, 1)
-  .option("-p, --num-of-players [p]", "#Players", (n) => { return parseInt(n); }, 2)
+  .option("-m, --num-of-matches [m]", "#Matches", (n) => { return parseInt(n); }, 4)
+  .option("-p, --num-of-players [p]", "#Players", (n) => { return parseInt(n); }, 4)
   .option("-u, --url [url]", "url", "http://localhost:3000")
   .option("-K, --K [k]", "K", (n) => { return parseInt(n); }, 32)
   .option("-G, --G [g]", "G", (G) => { return G.split(',').map(parseFloat) }, [1, 1, 1, 1, 1, 1])
   .parse(process.argv);
 
-let utils = require("../test/utils.js");
+let utils = require("../tests/utils.js");
 utils.apiUrl = program.url;
 
 require("async").auto({

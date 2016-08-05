@@ -65,7 +65,7 @@ module.exports.defaultGet = (collection) => {
 }
 
 module.exports.error = (err, req, res) => {
-  let reqInfo = reqInfo(req);
+  let reqInfo = this.reqInfo(req);
   reqInfo.stack = err.stack;
   console.log(JSON.stringify(reqInfo));
 

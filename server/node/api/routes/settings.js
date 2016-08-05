@@ -76,7 +76,9 @@ router
           return;
         }
         
+        console.log(doc);
         if (!utils.isProduction()) {
+          console.log(1);
           res.json(doc);
           return;
         }

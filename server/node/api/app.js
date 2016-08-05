@@ -19,13 +19,14 @@ async.waterfall([
   },
   (callback) => {
     app.use("/", middleware.log);
-    app.use("/", middleware.pong);
     app.use("/", middleware.parseAccessToken);
 
     app.use("/", require("./routes/players.js"));
     app.use("/", require("./routes/matches.js"));
     app.use("/", require("./routes/ratings.js"));
     app.use("/", require("./routes/settings.js"));
+
+    app.get("/", middleware.pong);
 
     app.use("/", middleware.error);
 
