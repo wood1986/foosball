@@ -108,7 +108,7 @@ module.exports.run = (F, isFinalize, socket) => {
     "newMatch": ["newRatings", "match", (results, callback) => {
       matchesCollection.updateOne(
         {
-          "_id": results.match
+          "_id": results.match._id
         },
         {
           "$set": { "state": isFinalize ? 1 : 0 },
