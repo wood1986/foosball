@@ -36,6 +36,10 @@ module.exports.log = (req, res, next) => {
   next();
 };
 
+module.exports.pong = (req, res) => {
+  res.status(200).end();
+}
+
 module.exports.defaultGet = (collection) => {
   return (req, res, next) => {
     try {

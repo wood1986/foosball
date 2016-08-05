@@ -19,6 +19,7 @@ async.waterfall([
   },
   (callback) => {
     app.use("/", middleware.log);
+    app.use("/", middleware.pong);
     app.use("/", middleware.parseAccessToken);
 
     app.use("/", require("./routes/players.js"));
