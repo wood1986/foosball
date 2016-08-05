@@ -8,7 +8,7 @@ program
   .option("-G, --G [g]", "G", (G) => { return G.split(',').map(parseFloat) }, [1, 1, 1, 1, 1, 1])
   .parse(process.argv);
 
-let utils = require("../api/test/utils.js");
+let utils = require("../test/utils.js");
 utils.apiUrl = program.url;
 
 require("async").auto({

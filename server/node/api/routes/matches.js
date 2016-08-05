@@ -2,30 +2,32 @@
 
 let name = __filename.replace(new RegExp(`(^${__dirname.replace("/", "\/")}\/|\.js$)`, "g"), ""),
   router = require("express").Router(), // eslint-disable-line new-cap
-  mongo = require("../../../common/mongo.js")(),
+  mongo = require("../../common/mongo.js")(),
   collection = mongo.collection(name),
   async = require("async"),
-  utils = require("../../../common/utils.js"),
-  middleware = require("../../../common/middleware.js"),
-  elo = require("../../../common/elo.js"),
+  utils = require("../../common/utils.js"),
+  middleware = require("../../common/middleware.js"),
+  elo = require("../../common/elo.js"),
   socket = require("../sockets/ratings.js"),
   _ = require("lodash");  // eslint-disable-line id-length
 
 router
   .route(`/1.0/${name}`)
   .get(middleware.defaultGet(collection))
-  .post((req, res) => {
+  .post((req, res, next) => {
     let accessToken = req.query.accessToken;
 
     if (!accessToken) {
-      res.status(401).end();
+      res.status(401);
+      next(new Error());
       return;
     }
 
     let body = req.body;
 
     if (!req.body) {
-      res.status(400).end();
+      res.status(400);
+      next(new Error());
       return;
     }
 
@@ -33,7 +35,8 @@ router
       losers = (_.isArray(body.losers) ? _.flattenDeep(body.losers) : []).sort();
     
     if (winners.indexOf(accessToken.id) === -1 && !utils.isAppToken(accessToken)) {
-      res.status(400).end();
+      res.status(400);
+      next(new Error());
       return;
     }
     
@@ -45,14 +48,16 @@ router
       .value();
     
     if (!(players.length === 2 || players.length === 4 || players.length === winners.length + losers.length)) {
-      res.status(400).end();
+      res.status(400);
+      next(new Error());
       return;
     }
 
     let score = parseInt(body.score) || 0;
 
     if (score < 1) {
-      res.status(400).end();
+      res.status(400);
+      next(new Error());
       return;
     }
 
@@ -60,17 +65,20 @@ router
       playedAt = parseInt(body.playedAt) || now;
     
     if ((utils.isProduction()) && (playedAt > now || playedAt < now - 86400000)) {
-      res.status(400).end();
+      res.status(400);
+      next(new Error());
       return;
     }
 
     if (!body.K) {
-      res.status(400).end();
+      res.status(400);
+      next(new Error());
       return;
     }
 
     if (!body.G) {
-      res.status(400).end();
+      res.status(400);
+      next(new Error());
       return;
     }
 
@@ -86,12 +94,11 @@ router
           (err, result) => {
             if (err) {
               callback(err);
-              res.status(500).end();
               return;
             }
 
             if (result[0].count !== players.length) {
-              res.status(400).end();
+              res.status(400);
               callback(new Error(""));
               return;
             }
@@ -112,12 +119,11 @@ router
           (err, result) => {
             if (err) {
               callback(err);
-              res.status(500).end();
               return;
             }
 
             if (!result) {
-              res.status(400).end();
+              res.status(400);
               callback(new Error(""));
               return;
             }
@@ -138,12 +144,11 @@ router
           (err, result) => {
             if (err) {
               callback(err);
-              res.status(500).end();
               return;
             }
 
             if (!result || !result.G[score]) {
-              res.status(400).end();
+              res.status(400);
               callback(new Error(""));
               return;
             }
@@ -172,7 +177,6 @@ router
           },
           (err) => {
             if (err) {
-              res.status(500).end();
               callback(err);
               return;
             }
@@ -186,6 +190,12 @@ router
         elo.run(400, false, socket);
         callback();
       }]
+    }, (err) => {
+      if (err) {
+        next(err);
+      }
+
+      return;
     });
   });
 

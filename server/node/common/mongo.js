@@ -1,6 +1,6 @@
 "use strict";
 
-let configs = require("../../configs.js");
+let configs = require("../../configs/configs.js");
 
 module.exports = (callback) => {
   if (this.db) {
