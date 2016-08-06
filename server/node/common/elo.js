@@ -62,17 +62,16 @@ module.exports.queue = async.queue((task, callback) => {
             "$match": {
               "$and": [
                 {
-                  "player": { "$in": _.flattenDeep([match.winners, match.losers]) },
-                  "createdAt": { "$lte": match.playedAt }
+                  "player": { "$in": _.flattenDeep([match.winners, match.losers]) }
                 }
               ]
             }
           },
-          { "$sort": { "createdAt": -1 } },
+          { "$sort": { "createdAt": 1 } },
           {
             "$group": {
               "_id": "$player",
-              "points": { "$first": "$point" }
+              "points": { "$first": "$points" }
             }
           }
         ],
@@ -85,7 +84,7 @@ module.exports.queue = async.queue((task, callback) => {
         ratings = _.reduce(
           results.aggregateRatings,
           (result, value) => {
-            result[value.player] = value.points;
+            result[value._id] = value.points;
             return result;
           },
           {}
@@ -103,7 +102,9 @@ module.exports.queue = async.queue((task, callback) => {
         createdAt = Date.now();
       
       let docs = [].concat(createRatings(match.winners, Row, Rol, K, G, task.F, Dw, Dl, Ew, El, Rnw, match._id, createdAt)).concat(createRatings(match.losers, Row, Rol, K, G, task.F, Dw, Dl, Ew, El, Rnl, match._id, createdAt));
-        
+      
+      console.log(results, docs);
+
       ratingsCollection.insertMany(
         docs,
         {
