@@ -30,18 +30,18 @@ let createRatings = (players, Row, Rol, K, G, F, Dw, Dl, Ew, El, Rn, match, crea
 };
 
 module.exports.queue = async.queue((task, callback) => {
+  let query = {
+    "$or": [
+      { "state": { "$exists": false } }
+    ]
+  };
+
+  if (task.isFinalize) {
+    query["$or"].push({ "state": { "$ne": 1 } });
+  }
+
   async.auto({
     "findOneMatch": (callback) => {
-      let query = {
-        "$or": [
-          { "state": { "$exists": false } }
-        ]
-      };
-
-      if (task.isFinalize) {
-        query["$or"].push({ "state": { "$ne": 1 } });
-      } 
-
       matchesCollection.findOne(
         query,
         { "sort": { "playedAt": 1 } },
@@ -63,7 +63,8 @@ module.exports.queue = async.queue((task, callback) => {
               "$and": [
                 {
                   "player": { "$in": _.flattenDeep([match.winners, match.losers]) }
-                }
+                },
+                query
               ]
             }
           },
@@ -71,7 +72,8 @@ module.exports.queue = async.queue((task, callback) => {
           {
             "$group": {
               "_id": "$player",
-              "points": { "$first": "$points" }
+              "points": { "$first": "$points" },
+              "ratings_id": { "$first": "$_id" }
             }
           }
         ],
@@ -103,8 +105,6 @@ module.exports.queue = async.queue((task, callback) => {
       
       let docs = [].concat(createRatings(match.winners, Row, Rol, K, G, task.F, Dw, Dl, Ew, El, Rnw, match._id, createdAt)).concat(createRatings(match.losers, Row, Rol, K, G, task.F, Dw, Dl, Ew, El, Rnl, match._id, createdAt));
       
-      console.log(results, docs);
-
       ratingsCollection.insertMany(
         docs,
         {
@@ -114,6 +114,21 @@ module.exports.queue = async.queue((task, callback) => {
         (err) => {
           callback(err, docs);
         }
+      );
+    }],
+    "updateManyRatings": ["insertManyRatings", "aggregateRatings", (results, callback) => {
+      ratingsCollection.updateMany(
+        {
+          "_id": { "$in": _.map(results.aggregateRatings, "ratings_id") }
+        },
+        {
+          "$set": { "state": task.isFinalize ? 1 : 0 },
+        },
+        {
+          "w": 1,
+          "j": true
+        },
+        callback
       );
     }],
     "updateOneMatch": ["insertManyRatings", "findOneMatch", (results, callback) => {
