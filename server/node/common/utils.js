@@ -1,6 +1,6 @@
 "use strict";
 
-let configs = require("../../configs.js"),
+let configs = require("../../configs/configs.js"),
   crypto = require("crypto"),
   uuid = require("node-uuid");
   

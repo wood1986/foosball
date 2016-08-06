@@ -1,5 +1,16 @@
 let utils = require("./utils.js");
 
+let reqInfo = (req) => {
+  return {
+    body: req.body,
+    header: req.header,
+    method: req.method,
+    param: req.param,
+    query: req.query,
+    url: req.url,
+  };
+}
+
 module.exports.parseAccessToken = (req, res, next) => {
   let accessToken = null;
 
@@ -19,23 +30,18 @@ module.exports.parseAccessToken = (req, res, next) => {
 
 module.exports.log = (req, res, next) => {
   if (!utils.isProduction()) {
-    let log = {
-      body: req.body,
-      header: req.header,
-      method: req.method,
-      param: req.param,
-      query: req.query,
-      url: req.url
-    };
-
-    console.log(JSON.stringify(log)); // eslint-disable-line no-console
+    console.log(JSON.stringify(reqInfo(req)));
   }
 
   next();
 };
 
+module.exports.pong = (req, res) => {
+  res.status(200).end();
+}
+
 module.exports.defaultGet = (collection) => {
-  return (req, res) => {
+  return (req, res, next) => {
     try {
       collection
         .aggregate(
@@ -43,7 +49,7 @@ module.exports.defaultGet = (collection) => {
           {},
           (err, result) => {
             if (err) {
-              res.status(500).end();
+              next(err);
               return;
             }
             
@@ -51,8 +57,26 @@ module.exports.defaultGet = (collection) => {
           }
         );
     }
-    catch(err) {
-      res.status(400).end();
+    catch (err) {
+      res.status(400);
+      next(err);
     }
   }
+}
+
+module.exports.notFound = (req, res, next) => {
+  res.status(400);
+  next(new Error());
+}
+
+module.exports.error = (err, req, res) => {
+  let reqInfo = this.reqInfo(req);
+  reqInfo.stack = err.stack;
+  console.log(JSON.stringify(reqInfo));
+
+  if (!res.statusCode) {
+    res.status(500);
+  }
+
+  res.end();
 }

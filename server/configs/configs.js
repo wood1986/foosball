@@ -7,7 +7,7 @@ var configs = {
   "mongo": {
     "username": "node",
     "password": "bdq46DzNNqVrdsPM",
-    "host": "127.0.0.1",
+    "host": "mongo",
     "database": "foosball"
   }
 };
