@@ -18,8 +18,8 @@ async.waterfall([
     require("../common/mongo.js")(callback);
   },
   (callback) => {
-    app.use("/", middleware.log);
-    app.use("/", middleware.parseAccessToken);
+    app.use(middleware.log);
+    app.use(middleware.parseAccessToken);
 
     app.use("/", require("./routes/players.js"));
     app.use("/", require("./routes/matches.js"));
@@ -27,8 +27,9 @@ async.waterfall([
     app.use("/", require("./routes/settings.js"));
 
     app.get("/", middleware.pong);
-
-    app.use("/", middleware.error);
+    
+    app.use(middleware.notFound);
+    app.use(middleware.error);
 
     require("./sockets/ratings.js");
 

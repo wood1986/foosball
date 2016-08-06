@@ -64,6 +64,11 @@ module.exports.defaultGet = (collection) => {
   }
 }
 
+module.exports.notFound = (req, res, next) => {
+  res.status(400);
+  next(new Error());
+}
+
 module.exports.error = (err, req, res) => {
   let reqInfo = this.reqInfo(req);
   reqInfo.stack = err.stack;

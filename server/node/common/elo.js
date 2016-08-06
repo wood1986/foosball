@@ -1,7 +1,9 @@
 let _ = require("lodash"),
     async = require("async"),
     utils = require("./utils.js"),
-    mongo = require("./mongo.js")();
+    mongo = require("./mongo.js")(),
+    matchesCollection = mongo.collection("matches"),
+    ratingsCollection = mongo.collection("ratings");
     
 let createRatings = (players, Row, Rol, K, G, F, Dw, Dl, Ew, El, Rn, match, createdAt) => {
   return _.map(
@@ -27,20 +29,27 @@ let createRatings = (players, Row, Rol, K, G, F, Dw, Dl, Ew, El, Rn, match, crea
   );
 };
 
-module.exports.run = (F, isFinalize, socket) => {
-  let matchesCollection = mongo.collection("matches"),
-    ratingsCollection = mongo.collection("ratings");
-    
+module.exports.queue = async.queue((task, callback) => {
   async.auto({
-    "match": (callback) => {
-      matchesCollection.findOne({
-        "state": { "$exists": false }
-      }, {
-          "sort": { "playedAt": 1 }
-        }, callback);
+    "findOneMatch": (callback) => {
+      let query = {
+        "$or": [
+          { "state": { "$exists": false } }
+        ]
+      };
+
+      if (task.isFinalize) {
+        query["$or"].push({ "state": { "$ne": 1 } });
+      } 
+
+      matchesCollection.findOne(
+        query,
+        { "sort": { "playedAt": 1 } },
+        callback
+      );
     },
-    "ratings": ["match", (results, callback) => {
-      let match = results.match;
+    "aggregateRatings": ["findOneMatch", (results, callback) => {
+      let match = results.findOneMatch;
 
       if (!match) {
         callback(false);
@@ -71,12 +80,13 @@ module.exports.run = (F, isFinalize, socket) => {
         callback
       )
     }],
-    "newRatings": ["match", "ratings", (results, callback) => {
-      let match = results.match,
+    "insertManyRatings": ["findOneMatch", "aggregateRatings", (results, callback) => {
+      let match = results.findOneMatch,
         ratings = _.reduce(
-          results.ratings,
+          results.aggregateRatings,
           (result, value) => {
-            result[value.player] = value.points; return result;
+            result[value.player] = value.points;
+            return result;
           },
           {}
         ),
@@ -86,13 +96,13 @@ module.exports.run = (F, isFinalize, socket) => {
         G = match.G,
         Dw = Rol - Row,
         Dl = Row - Rol,
-        Ew = 1.0 / (Math.pow(10, -Dw / F) + 1),
-        El = 1.0 / (Math.pow(10, -Dl / F) + 1),
+        Ew = 1.0 / (Math.pow(10, -Dw / task.F) + 1),
+        El = 1.0 / (Math.pow(10, -Dl / task.F) + 1),
         Rnw = Row + G * K * (1 - Ew),
         Rnl = Rol + G * K * (0 - El),
         createdAt = Date.now();
       
-      let docs = [].concat(createRatings(match.winners, Row, Rol, K, G, F, Dw, Dl, Ew, El, Rnw, match._id, createdAt)).concat(createRatings(match.losers, Row, Rol, K, G, F, Dw, Dl, Ew, El, Rnl, match._id, createdAt));
+      let docs = [].concat(createRatings(match.winners, Row, Rol, K, G, task.F, Dw, Dl, Ew, El, Rnw, match._id, createdAt)).concat(createRatings(match.losers, Row, Rol, K, G, task.F, Dw, Dl, Ew, El, Rnl, match._id, createdAt));
         
       ratingsCollection.insertMany(
         docs,
@@ -105,28 +115,27 @@ module.exports.run = (F, isFinalize, socket) => {
         }
       );
     }],
-    "newMatch": ["newRatings", "match", (results, callback) => {
+    "updateOneMatch": ["insertManyRatings", "findOneMatch", (results, callback) => {
       matchesCollection.updateOne(
         {
-          "_id": results.match._id
+          "_id": results.findOneMatch._id
         },
         {
-          "$set": { "state": isFinalize ? 1 : 0 },
+          "$set": { "state": task.isFinalize ? 1 : 0 },
         },
         {
-          "upsert": true,
           "w": 1,
           "j": true
         },
         callback
       );
     }],
-    "io": ["newRatings", (results, callback) => {
-      if (socket) {
-        socket.send(results);
+    "send": ["insertManyRatings", (results, callback) => {
+      if (task.socket) {
+        task.socket.send(results.insertManyRatings);
       }
       
       callback();
     }]
-  });
-}
+  }, callback);
+}, 1);

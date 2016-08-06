@@ -167,9 +167,9 @@ router
             "K_id": results.K._id,
             "G": results.G.G[score],
             "G_id": results.G._id,
-            playedAt,
             "createdBy": accessToken.id,
-            "createdAt": now
+            "createdAt": now,
+            "playedAt": now
           },
           {
             "w": 1,
@@ -187,7 +187,7 @@ router
         )
       }],
       "elo": ["match", (results, callback) => {
-        elo.run(400, false, socket);
+        elo.queue.push({ F: 400, isFinalized: false, socket });
         callback();
       }]
     }, (err) => {

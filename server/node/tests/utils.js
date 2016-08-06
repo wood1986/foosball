@@ -49,6 +49,8 @@ module.exports.createPlayers = (n, callback) => {
 }
 
 module.exports.createMatches = (n, players, settings, callback) => {
+  let playedAt = _.times(players.length, () => { return Date.now() - _.random(86400000 * 28) }).sort();
+  
   async.times(
     n,
     (m, next) => {
@@ -59,7 +61,7 @@ module.exports.createMatches = (n, players, settings, callback) => {
             "winners": _(players).take(singleOrDouble).map("id").value(),
             "losers": _(players).takeRight(singleOrDouble).map("id").value(),
             "score": _.random(1, 5),
-            "playedAt": Date.now() - _.random(86400000 * 28),
+            "playedAt": playedAt[m],
             "K": settings._id,
             "G": settings._id
           };
