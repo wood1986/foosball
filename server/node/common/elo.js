@@ -1,6 +1,6 @@
 let _ = require("lodash"),
     async = require("async"),
-    utils = require("./utils.js"),
+    utils = require("./mainUtils.js"),
     mongo = require("./mongo.js")(),
     matchesCollection = mongo.collection("matches"),
     ratingsCollection = mongo.collection("ratings");

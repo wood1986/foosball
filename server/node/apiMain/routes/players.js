@@ -4,7 +4,7 @@ let name = __filename.replace(new RegExp(`(^${__dirname.replace("/", "\/")}\/|\.
   router = require("express").Router(),
   collection = require("../../common/mongo.js")().collection(name),
   middleware = require("../../common/middleware.js"),
-  utils = require("../../common/utils.js");
+  utils = require("../../common/mainUtils.js");
 
 router
   .route(`/1.0/${name}`)
@@ -35,10 +35,6 @@ router
         "displayName": body.displayName,
         "createdAt": Date.now()
       },
-      {
-        "w": 1,
-        "j": true
-      },
       (err) => {
         if (err) {
           next(err);
@@ -46,7 +42,7 @@ router
         }
 
         res.json({
-          id,
+          "_id": id,
           "accessToken": utils.obtainAccessToken(id)
         });
       }

@@ -26,7 +26,7 @@ startMongo:
 	docker run -dit -v $(CURDIR)/db:/data/db --cidfile=$(MONGO_CID) -p 27017:27017 mongo:latest --auth
 
 startNode:
-	docker run -dit -v $(CURDIR)/configs:/configs -v $(CURDIR)/node:/node --cidfile=$(NODE_CID) -p 3000:3000 -w /node --link $$(cat ./$(MONGO_CID)):mongo node:latest /bin/bash -c "npm install --production && node ./api/app.js"
+	docker run -dit -v $(CURDIR)/configs:/configs -v $(CURDIR)/node:/node --cidfile=$(NODE_CID) -p 3000:3000 -w /node --link $$(cat ./$(MONGO_CID)):mongo node:latest /bin/bash -c "npm install --production && node ./apiMain/app.js"
 
 initAll: initMongo initNode
 
