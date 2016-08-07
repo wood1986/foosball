@@ -5,7 +5,7 @@ let name = __filename.replace(new RegExp(`(^${__dirname.replace("/", "\/")}\/|\.
   collection = require("../../common/mongo.js")().collection(name),
   middleware = require("../../common/middleware.js"),
   _ = require("lodash"),
-  utils = require("../../common/utils.js");
+  utils = require("../../common/mainUtils.js");
 
 router
   .route(`/1.0/${name}`)
@@ -76,9 +76,7 @@ router
           return;
         }
         
-        console.log(doc);
         if (!utils.isProduction()) {
-          console.log(1);
           res.json(doc);
           return;
         }

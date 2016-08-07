@@ -1,15 +1,15 @@
 "use strict";
 
 let name = __filename.replace(new RegExp(`(^${__dirname.replace("/", "\/")}\/|\.js$)`, "g"), ""),
-  router = require("express").Router(), // eslint-disable-line new-cap
+  router = require("express").Router(),
   mongo = require("../../common/mongo.js")(),
   collection = mongo.collection(name),
   async = require("async"),
-  utils = require("../../common/utils.js"),
+  utils = require("../../common/mainUtils.js"),
   middleware = require("../../common/middleware.js"),
   elo = require("../../common/elo.js"),
   socket = require("../sockets/ratings.js"),
-  _ = require("lodash");  // eslint-disable-line id-length
+  _ = require("lodash");
 
 router
   .route(`/1.0/${name}`)
@@ -34,7 +34,7 @@ router
     let winners = (_.isArray(body.winners) ? _.flattenDeep(body.winners) : []).sort(),
       losers = (_.isArray(body.losers) ? _.flattenDeep(body.losers) : []).sort();
     
-    if (winners.indexOf(accessToken.id) === -1 && !utils.isAppToken(accessToken)) {
+    if (winners.indexOf(accessToken._id) === -1 && !utils.isAppToken(accessToken)) {
       res.status(400);
       next(new Error());
       return;
@@ -167,7 +167,7 @@ router
             "K_id": results.K._id,
             "G": results.G.G[score],
             "G_id": results.G._id,
-            "createdBy": accessToken.id,
+            "createdBy": accessToken._id,
             "createdAt": now,
             "playedAt": now
           },

@@ -30,9 +30,9 @@ module.exports.uuid = () => {
     .slice(0, -2);
 }
 
-module.exports.obtainAccessToken = (id) => {
+module.exports.obtainAccessToken = (_id) => {
   let object = {
-    id,
+    _id,
     "expiresAt": Date.now() + 86400000
   };
   
@@ -46,7 +46,7 @@ module.exports.isProduction = () => {
 module.exports.appId = "0000000000000000000000";
 
 module.exports.isAppToken = (accessToken) => {
-  return accessToken.id === this.appId;
+  return accessToken._id === this.appId;
 }
 
 module.exports.obtainAppToken = () => {
