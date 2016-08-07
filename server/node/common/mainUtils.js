@@ -6,7 +6,7 @@ let configs = require("../../configs/configs.js"),
   
 
 const algorithm = "aes-256-ctr",
-      password = configs.node.password;
+      password = configs.node.main.password;
 
 
 module.exports.encrypt = (string) => {

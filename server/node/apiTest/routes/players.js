@@ -1,9 +1,10 @@
 let request = require("request"),
   async = require("async"),  
-  should = require("should");
+  should = require("should"),
+  configs = require("../../../configs/configs.js");
     
 let name = __filename.replace(new RegExp(`(^${__dirname.replace("/", "\/")}\/|\.js$)`, "g"), ""),
-  uri = `${require("../../../configs/configs.js").mocha.uri}/1.0/${name}`;  
+  uri = `${configs.node.test.protocol}://${configs.node.test.host}/1.0/${name}`;  
 
 describe(`/1.0/${name}`, () => {
   describe("POST", () => {

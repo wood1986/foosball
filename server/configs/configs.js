@@ -2,7 +2,13 @@
 
 var configs = {
   "node": {
-    "password": "Om0X[aDTgWiz92lQ".toString("binary")
+    "main": {
+      "password": "Om0X[aDTgWiz92lQ".toString("binary")
+    },
+    "test": {
+      "protocol": "http",
+      "host": "127.0.0.1:3000"
+    }
   },
   "mongo": {
     "username": "node",

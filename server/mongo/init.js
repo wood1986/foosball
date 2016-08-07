@@ -5,9 +5,7 @@ db.createUser({
   "roles": [ { "role": "readWrite", "db": configs.mongo.database } ]
 });
 db.players.createIndex({ "email": 1 }, { "unique": true });
-db.players.createIndex({ "createdAt": 1 });
-db.matches.createIndex({ "playedAt": 1 });
-db.matches.createIndex({ "state": -1, "playedAt": 1 });
-db.ratings.createIndex({ "player": 1, "createdAt": 1 });
-db.settings.createIndex({ "startedAt": 1 });
+db.matches.createIndex({ "playedAt": 1, "state": 1 });
+db.ratings.createIndex({ "player": 1, "createdAt": 1, "state": 1 });
+db.settings.createIndex({ "validity": 1 });
 

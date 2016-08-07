@@ -2,10 +2,11 @@ let request = require("request"),
   should = require("should"),
   async = require("async"),
   mainUtils = require("../../common/mainUtils.js"),
-  testUtils = require("../../common/testUtils.js");
+  testUtils = require("../../common/testUtils.js"),
+  configs = require("../../../configs/configs.js");
     
 let name = __filename.replace(new RegExp(`(^${__dirname.replace("/", "\/")}\/|\.js$)`, "g"), ""),
-  uri = `${require("../../../configs/configs.js").mocha.uri}/1.0/${name}`;
+  uri = `${configs.node.test.protocol}://${configs.node.test.host}/1.0/${name}`;
 
 describe(`/1.0/${name}`, () => {
   let players = null;

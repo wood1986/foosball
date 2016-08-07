@@ -13,7 +13,7 @@ module.exports.createSettings = (K, G, validity, callback) => {
   request(
     {
       "method": "POST",
-      "uri": `${configs.mocha.uri}/1.0/settings`,
+      "uri": `http://${configs.node.test.host}/1.0/settings`,
       "json": true,
       body
     },
@@ -35,7 +35,7 @@ module.exports.createPlayers = (n, callback) => {
       request(
         {
           "method": "POST",
-          "uri": `${configs.mocha.uri}/1.0/players`,
+          "uri": `http://${configs.node.test.host}/1.0/players`,
           "json": true,
           body
         },
@@ -69,7 +69,7 @@ module.exports.createMatches = (n, players, settings, callback) => {
       request(
         {
           "method": "POST",
-          "uri": `${configs.mocha.uri}/1.0/matches`,
+          "uri": `http://${configs.node.test.host}/1.0/matches`,
           "json": true,
           body,
           "qs": {
