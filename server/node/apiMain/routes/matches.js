@@ -18,16 +18,18 @@ router
     let accessToken = req.query.accessToken;
 
     if (!accessToken) {
-      res.status(401);
-      next(new Error());
+      let err = new Error();
+      err.statusCode = 401;
+      next(err);
       return;
     }
 
     let body = req.body;
 
     if (!req.body) {
-      res.status(400);
-      next(new Error());
+      let err = new Error();
+      err.statusCode = 400;
+      next(err);
       return;
     }
 
@@ -35,8 +37,9 @@ router
       losers = (_.isArray(body.losers) ? _.flattenDeep(body.losers) : []).sort();
     
     if (winners.indexOf(accessToken._id) === -1 && !utils.isAppToken(accessToken)) {
-      res.status(400);
-      next(new Error());
+      let err = new Error();
+      err.statusCode = 400;
+      next(err);
       return;
     }
     
@@ -48,16 +51,18 @@ router
       .value();
     
     if (!(players.length === 2 || players.length === 4 || players.length === winners.length + losers.length)) {
-      res.status(400);
-      next(new Error());
+      let err = new Error();
+      err.statusCode = 400;
+      next(err);
       return;
     }
 
     let score = parseInt(body.score) || 0;
 
     if (score < 1) {
-      res.status(400);
-      next(new Error());
+      let err = new Error();
+      err.statusCode = 400;
+      next(err);
       return;
     }
 
@@ -65,20 +70,23 @@ router
       playedAt = parseInt(body.playedAt) || now;
     
     if ((utils.isProduction()) && (playedAt > now || playedAt < now - 86400000)) {
-      res.status(400);
-      next(new Error());
+      let err = new Error();
+      err.statusCode = 400;
+      next(err);
       return;
     }
 
     if (!body.K) {
-      res.status(400);
-      next(new Error());
+      let err = new Error();
+      err.statusCode = 400;
+      next(err);
       return;
     }
 
     if (!body.G) {
-      res.status(400);
-      next(new Error());
+      let err = new Error();
+      err.statusCode = 400;
+      next(err);
       return;
     }
 
@@ -93,13 +101,15 @@ router
           {},
           (err, result) => {
             if (err) {
+              err.statusCode = 500;
               callback(err);
               return;
             }
 
             if (result[0].count !== players.length) {
-              res.status(400);
-              callback(new Error(""));
+              let err = new Error();
+              err.statusCode = 400;
+              next(err);
               return;
             }
 
@@ -118,13 +128,15 @@ router
           },
           (err, result) => {
             if (err) {
+              err.statusCode = 500;
               callback(err);
               return;
             }
 
             if (!result) {
-              res.status(400);
-              callback(new Error(""));
+              let err = new Error();
+              err.statusCode = 400;
+              next(err);
               return;
             }
 
@@ -143,13 +155,15 @@ router
           },
           (err, result) => {
             if (err) {
+              err.statusCode = 500;
               callback(err);
               return;
             }
 
             if (!result || !result.G[score]) {
-              res.status(400);
-              callback(new Error(""));
+              let err = new Error();
+              err.statusCode = 400;
+              next(err);
               return;
             }
 
@@ -177,6 +191,7 @@ router
           },
           (err) => {
             if (err) {
+              err.statusCode = 500;
               callback(err);
               return;
             }
@@ -190,13 +205,7 @@ router
         elo.queue.push({ F: 400, isFinalized: false, socket });
         callback();
       }]
-    }, (err) => {
-      if (err) {
-        next(err);
-      }
-
-      return;
-    });
+    }, next);
   });
 
 module.exports = router;

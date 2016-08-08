@@ -11,14 +11,24 @@ router
   .route(`/1.0/${name}`)
   .get(middleware.defaultGet(collection))
   .post((req, res, next) => {
+    let accessToken = req.query.accessToken;
+
+    if (!utils.isAppToken(accessToken)) {
+      let err = new Error();
+      err.statusCode = 401;
+      next(err);
+      return;
+    }
+
     let doc = {},
         body = req.body;
     
     let K = body.K;
     if (K) {
       if (_.isNaN(K) || ~~K <= 1) {
-        res.status(400);
-        next(new Error());
+        let err = new Error();
+        err.statusCode = 400;
+        next(err);
         return;
       }
       doc.K = ~~K;
@@ -27,34 +37,45 @@ router
     let G = body.G;
     if (G) {
       if (!_.isArray(G) || !G.length) {
-        res.status(400);
-        next(new Error());
+        let err = new Error();
+        err.statusCode = 400;
+        next(err);
         return;
       }
 
       G = _.chain(G).map(parseFloat).value();
 
       if (_.findIndex(G, (f) => { return f < 1; } ) > -1) {
-        res.status(400);
-        next(new Error());
+        let err = new Error();
+        err.statusCode = 400;
+        next(err);
         return;
       }
 
       doc.G = G;
     }
+    
+    if (!G && !K) {
+      let err = new Error();
+      err.statusCode = 400;
+      next(err);
+      return;
+    }
 
     let validity = body.validity
     if (!_.isArray(validity)) {
-      res.status(400);
-      next(new Error());
+      let err = new Error();
+      err.statusCode = 400;
+      next(err);
       return;
     }
     
-    validity = _.chain(validity).map(_.ary(parseInt, 1)).value().sort();
+    validity = _.chain(validity).map(_.ary(parseInt, 1)).take(2).value().sort();
     
-    if (validity.length !== 2 && _.findIndex(validity, (i) => { return i < 0; }) > -1) {
-      res.status(400);
-      next(new Error());
+    if (validity.length != 2 || _.findIndex(validity, (i) => { return i < 0; }) > -1) {
+      let err = new Error();
+      err.statusCode = 400;
+      next(err);
       return;
     }
 
@@ -72,6 +93,7 @@ router
       },
       (err) => {
         if (err) {
+          err.statusCode = 500;  
           next(err);
           return;
         }

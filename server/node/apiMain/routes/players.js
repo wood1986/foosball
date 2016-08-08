@@ -13,14 +13,16 @@ router
     let body = req.body;
 
     if (!(body && body.displayName && body.email)) {
-      res.status(400);
-      next(new Error());
+      let err = new Error();
+      err.statusCode = 400;
+      next(err);
       return;
     }
 
     if (!(/^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(body.email) && body.email.length <= 254)) {
-      res.status(400);
-      next(new Error());
+      let err = new Error();
+      err.statusCode = 400;
+      next(err);
       return;
     }
 
@@ -37,6 +39,7 @@ router
       },
       (err) => {
         if (err) {
+          err.statusCode = 500;
           next(err);
           return;
         }

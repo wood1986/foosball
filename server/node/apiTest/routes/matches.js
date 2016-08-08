@@ -1,13 +1,10 @@
-let request = require("request"),
-  should = require("should"),
+let should = require("should"),
   async = require("async"),
   mainUtils = require("../../common/mainUtils.js"),
-  testUtils = require("../../common/testUtils.js"),
-  configs = require("../../../configs/configs.js");
-    
-let name = __filename.replace(new RegExp(`(^${__dirname.replace("/", "\/")}\/|\.js$)`, "g"), ""),
-  uri = `${configs.node.test.protocol}://${configs.node.test.host}/1.0/${name}`;
+  testUtils = require("../../common/testUtils.js");
 
+let name = __filename.replace(new RegExp(`(^${__dirname.replace("/", "\/")}\/|\.js$)`, "g"), "");
+  
 describe(`/1.0/${name}`, () => {
   let players = null;
   let settings = null;
@@ -15,13 +12,10 @@ describe(`/1.0/${name}`, () => {
   before((done) => {
     async.auto({
       "settings": (callback) => {
-        testUtils.createSettings(32, [1, 1, 1, 1, 1, 1], [0, Date.now() + 86400000 * 365], callback);
+        testUtils.createSettings(callback);
       },
       "players": (callback) => {
-        testUtils.createPlayers(
-          4,
-          callback
-        );
+        testUtils.createPlayers(4, callback);
       },
     }, (err, results) => {
       players = results.players;
@@ -65,20 +59,11 @@ describe(`/1.0/${name}`, () => {
         async.each(
           reqs,
           (req, callback) => {
-            request(
-              {
-                "method": "POST",
-                uri,
-                "json": true,
-                "body": req.body,
-                "qs": req.qs
-              },
-              (err, res) => {
-                should(err).be.equal(null);
-                should(res.statusCode).equal(200);
-                callback();
-              }
-            )
+            testUtils.defaultPost(`1.0/${name}`, req, (err, res) => {
+              should(err).be.equal(null);
+              should(res.statusCode).equal(200);
+              callback();
+            });
           },
           done
         );
@@ -93,8 +78,8 @@ describe(`/1.0/${name}`, () => {
           { "winners": [players[0]._id, players[0]._id], "losers": [players[0]._id, players[0]._id] },
           { "winners": [players[0]._id, players[0]._id], "losers": [players[1]._id, players[2]._id] },
           { "winners": [players[0]._id, players[1]._id], "losers": [players[0]._id, players[1]._id] },
-          { "winners": [players[0]._id, "0000000000000000000000"], "losers": [players[0]._id, players[1]._id] },
-          { "winners": [players[0]._id, players[1]._id, "0000000000000000000000"], "losers": [players[2]._id, players[3]._id] },
+          { "winners": [players[0]._id, mainUtils.appId], "losers": [players[0]._id, players[1]._id] },
+          { "winners": [players[0]._id, players[1]._id, mainUtils.appId], "losers": [players[2]._id, players[3]._id] },
           { "winners": [players[0]._id], "losers": [players[1]._id, players[2]._id] },
           { "winners": [players[0]._id], "losers": [players[1]._id], "score": 0 },
           { "winners": [players[0]._id], "losers": [players[1]._id], "score": 0 },
@@ -103,29 +88,20 @@ describe(`/1.0/${name}`, () => {
           { "winners": [players[0]._id], "losers": [players[1]._id], "score": 1, "playedAt": Date.now() },
           { "winners": [players[0]._id], "losers": [players[1]._id], "score": 1, "playedAt": Date.now(), K: settings._id },
           { "winners": [players[0]._id], "losers": ["1111111111111111111111"], "score": 1, "playedAt": Date.now(), K: settings._id, G: settings._id },
-          { "winners": [players[0]._id], "losers": [players[1]._id], "score": 1, "playedAt": Date.now(), K: "0000000000000000000000", G: settings._id },
-          { "winners": [players[0]._id], "losers": [players[1]._id], "score": 1, "playedAt": Date.now(), K: settings._id, G: "0000000000000000000000" },
+          { "winners": [players[0]._id], "losers": [players[1]._id], "score": 1, "playedAt": Date.now(), K: mainUtils.appId, G: settings._id },
+          { "winners": [players[0]._id], "losers": [players[1]._id], "score": 1, "playedAt": Date.now(), K: settings._id, G: mainUtils.appId }
         ];
+
+        let qs = { "accessToken": players[0].accessToken };
 
         async.each(
           bodies,
           (body, callback) => {
-            request(
-              {
-                "method": "POST",
-                uri,
-                "json": true,
-                "body": body,
-                "qs": {
-                  "accessToken": players[0].accessToken
-                }
-              },
-              (err, res) => {
-                should(err).be.equal(null);
-                should(res.statusCode).equal(400);
-                callback(null);
-              }
-            );
+            testUtils.defaultPost(`1.0/${name}`, { body, qs }, (err, res) => {
+              should(err).be.equal(null);
+              should(res.statusCode).equal(400);
+              callback(null);
+            });
           },
           done
         );

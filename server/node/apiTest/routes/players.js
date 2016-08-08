@@ -1,10 +1,8 @@
-let request = require("request"),
-  async = require("async"),  
+let async = require("async"),  
   should = require("should"),
-  configs = require("../../../configs/configs.js");
-    
-let name = __filename.replace(new RegExp(`(^${__dirname.replace("/", "\/")}\/|\.js$)`, "g"), ""),
-  uri = `${configs.node.test.protocol}://${configs.node.test.host}/1.0/${name}`;  
+  testUtils = require("../../common/testUtils.js");
+
+let name = __filename.replace(new RegExp(`(^${__dirname.replace("/", "\/")}\/|\.js$)`, "g"), "");  
 
 describe(`/1.0/${name}`, () => {
   describe("POST", () => {
@@ -15,20 +13,12 @@ describe(`/1.0/${name}`, () => {
           "displayName": Math.random().toString(36).substring(2).repeat(16)
         };
 
-        request(
-          {
-            "method": "POST",
-            uri,
-            "json": true,
-            "body": body
-          },
-          (err, res, body) => {
-            should(err).be.equal(null);
-            should(res.statusCode).equal(200);
-            should(body).have.properties("_id", "accessToken");
-            done();
-          }
-        )
+        testUtils.defaultPost(`1.0/${name}`, { body }, (err, res, body) => {
+          should(err).be.equal(null);
+          should(res.statusCode).equal(200);
+          should(body).have.properties("_id", "accessToken");
+          done();
+        });
       });
 
       it("400", (done) => {
@@ -43,18 +33,11 @@ describe(`/1.0/${name}`, () => {
         async.each(
           bodies,
           (body, callback) => {
-            request(
-              {
-                "method": "POST",
-                uri,
-                "json": true,
-                "body": body
-              },
-              (err, res) => {
-                should(err).be.equal(null);
-                should(res.statusCode).equal(400);
-                callback(null);
-              });
+            testUtils.defaultPost(`1.0/${name}`, { body }, (err, res) => {
+              should(err).be.equal(null);
+              should(res.statusCode).equal(400);
+              callback(null);
+            });
           },
           done
         );

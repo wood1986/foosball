@@ -3,11 +3,13 @@ let utils = require("./mainUtils.js");
 let reqInfo = (req) => {
   return {
     body: req.body,
-    header: req.header,
+    headers: req.headers,
     method: req.method,
-    param: req.param,
+    params: req.params,
     query: req.query,
-    url: req.url,
+    ip: req.ip,
+    ips: req.ips,
+    url: req.url
   };
 }
 
@@ -26,14 +28,6 @@ module.exports.parseAccessToken = (req, res, next) => {
     req.query.accessToken = accessToken;
     next();
   }
-};
-
-module.exports.log = (req, res, next) => {
-  if (!utils.isProduction()) {
-    console.log(JSON.stringify(reqInfo(req)));
-  }
-
-  next();
 };
 
 module.exports.pong = (req, res) => {
@@ -58,25 +52,21 @@ module.exports.defaultGet = (collection) => {
         );
     }
     catch (err) {
-      res.status(400);
+      err.statusCode = 400;
       next(err);
     }
   }
 }
 
 module.exports.notFound = (req, res, next) => {
-  res.status(400);
-  next(new Error());
+  let err = new Error();
+  err.statusCode = 404;
+  next(err);
 }
 
-module.exports.error = (err, req, res) => {
-  let reqInfo = this.reqInfo(req);
-  reqInfo.stack = err.stack;
-  console.log(JSON.stringify(reqInfo));
-
-  if (!res.statusCode) {
-    res.status(500);
-  }
-
-  res.end();
+module.exports.error = (err, req, res, next) => {
+  let _reqInfo = reqInfo(req);
+  _reqInfo.stack = err.stack;
+  console.log(_reqInfo);
+  res.status(err.statusCode).end();
 }
