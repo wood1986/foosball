@@ -35,4 +35,6 @@ async.waterfall([
 
     callback();
   }
-]);
+], () => {
+  console.log("development.js");
+});

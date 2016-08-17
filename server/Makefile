@@ -1,18 +1,22 @@
 MONGO_CID = mongo.cid
 NODE_CID = node.cid
 
-initMongo:
-	docker pull mongo
+initMongo: updateMongo
 	docker run -dit -v $(CURDIR)/db:/data/db -v $(CURDIR)/configs:/configs -v $(CURDIR)/mongo:/mongo --cidfile=$(MONGO_CID) -p 27017:27017 mongo:latest
 	sleep 1;
 	docker exec -it $$(cat ./$(MONGO_CID)) mongo --eval 'load("/configs/configs.js"); load("/mongo/init.js");'
 	make restartMongo
 
-initNode:
+initNode: updateNode
+	make retartNode
+
+updateMongo:
+	docker pull mongo
+
+updateNode:
 	docker pull node
 	docker run -dit -v $(CURDIR)/node:/node --cidfile=$(NODE_CID) -w /node node:latest npm install --production
-	make retartNode
-	 
+
 stopMongo:
 	docker stop $$(cat ./$(MONGO_CID))
 	docker rm $$(cat ./$(MONGO_CID))
@@ -40,3 +44,4 @@ stopAll: stopMongo stopNode
 startAll: startMongo startNode
 
 restartAll: restartMongo restartNode
+
