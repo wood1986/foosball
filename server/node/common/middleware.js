@@ -64,9 +64,9 @@ module.exports.notFound = (req, res, next) => {
   next(err);
 }
 
-module.exports.error = (err, req, res, next) => {
+module.exports.error = (err, req, res) => {
   let _reqInfo = reqInfo(req);
   _reqInfo.stack = err.stack;
-  console.log(_reqInfo);
+  console.log(_reqInfo);  // eslint-disable-line no-console
   res.status(err.statusCode).end();
 }

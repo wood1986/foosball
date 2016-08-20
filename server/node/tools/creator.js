@@ -28,8 +28,8 @@ require("async").auto({
     );
   }],
   "display": ["players", "settings", (results, callback) => {
-    console.log(results.players);
-    console.log(results.settings);
+    console.log(results.players);  // eslint-disable-line no-console
+    console.log(results.settings);  // eslint-disable-line no-console
     callback();
   }]
 });

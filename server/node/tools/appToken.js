@@ -1,2 +1,2 @@
 let utils = require("../common/utils.js");
-console.log(utils.obtainAppToken());
+console.log(utils.obtainAppToken());  // eslint-disable-line no-console
